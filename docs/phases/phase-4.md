@@ -164,7 +164,7 @@ Implement the Turn Engine, which enforces the strict turn phase order (Move → 
 Following TDD methodology, investigated why cards are not drawn and starting unit selection fails at game start. Created failing tests to document exact issues before attempting fixes.
 
 #### Root Cause Analysis
-Both issues stem from **missing integration points** rather than fundamental engine bugs:
+Both issues stem from **missing integration points** rather than fundamental engine bugs..:
 
 #### Bug 1: Cards Not Drawn at Game Start
 **Problem:** Players start with empty hands instead of 4 cards each  
