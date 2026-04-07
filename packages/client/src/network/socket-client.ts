@@ -1,0 +1,73 @@
+import { io, Socket } from 'socket.io-client';
+import type { ClientIntent, GameState } from '@mugen/shared';
+import { useGameStore } from '../store/game-store.js';
+
+let socket: Socket | null = null;
+
+export function connect(url: string): void {
+  if (socket?.connected) return;
+
+  socket = io(url, { autoConnect: true });
+  const store = useGameStore.getState();
+
+  socket.on('connected', (data: { playerId: string }) => {
+    store.setPlayerId(data.playerId);
+  });
+
+  socket.on('lobby_created', (data: { code: string }) => {
+    store.setLobbyCode(data.code);
+  });
+
+  socket.on('lobby_joined', (data: { code: string }) => {
+    store.setLobbyCode(data.code);
+  });
+
+  socket.on('lobby_updated', (lobby: { players: { id: string; name: string; isReady: boolean }[] }) => {
+    store.setLobbyPlayers(lobby.players);
+  });
+
+  socket.on('game_state', (state: GameState) => {
+    store.setGameState(state);
+  });
+
+  socket.on('error', (data: { message: string }) => {
+    store.setError(data.message);
+  });
+
+  socket.on('intent_error', (data: { message: string }) => {
+    store.setError(data.message);
+  });
+
+  socket.on('player_disconnected', (_data: { playerId: string }) => {
+    // Handled via lobby_updated / game_state
+  });
+}
+
+export function disconnect(): void {
+  socket?.disconnect();
+  socket = null;
+}
+
+export function createLobby(name: string): void {
+  socket?.emit('create_lobby', { name });
+}
+
+export function joinLobby(code: string, name: string): void {
+  socket?.emit('join_lobby', { code, name });
+}
+
+export function setReady(ready: boolean): void {
+  socket?.emit('set_ready', { ready });
+}
+
+export function startGame(): void {
+  socket?.emit('start_game');
+}
+
+export function sendIntent(intent: ClientIntent): void {
+  socket?.emit('game_intent', intent);
+}
+
+export function getSocket(): Socket | null {
+  return socket;
+}

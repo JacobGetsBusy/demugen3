@@ -1,0 +1,36 @@
+import { useEffect, useRef } from 'react';
+import Phaser from 'phaser';
+import { GameScene } from '../scenes/GameScene.js';
+
+export function GameBoard() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const gameRef = useRef<Phaser.Game | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || gameRef.current) return;
+
+    gameRef.current = new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: containerRef.current,
+      width: 30 * 24,
+      height: 30 * 24,
+      backgroundColor: '#0f0f1a',
+      scene: [GameScene],
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+      },
+    });
+
+    return () => {
+      gameRef.current?.destroy(true);
+      gameRef.current = null;
+    };
+  }, []);
+
+  return (
+    <div className="flex items-center justify-center flex-1">
+      <div ref={containerRef} className="rounded-xl overflow-hidden shadow-2xl border border-white/5" />
+    </div>
+  );
+}
