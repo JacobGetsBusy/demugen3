@@ -112,8 +112,9 @@ export class GameScene extends Phaser.Scene {
   private createUnitSprite(unit: UnitInstance, color: number): Phaser.GameObjects.Container {
     const container = this.add.container(0, 0);
 
-    const circle = this.add.circle(0, 0, 9, color, 0.8);
-    circle.setStrokeStyle(1, 0xffffff, 0.6);
+    // RED SQUARE DEBUG VISUALIZATION
+    const square = this.add.rectangle(0, 0, CELL_SIZE - 4, CELL_SIZE - 4, 0xef4444, 0.9);
+    square.setStrokeStyle(1, 0xffffff, 0.8);
 
     const initial = this.add.text(0, -1, unit.card.name.charAt(0).toUpperCase(), {
       fontSize: '9px',
@@ -124,9 +125,18 @@ export class GameScene extends Phaser.Scene {
     const hpBar = this.add.graphics();
     container.setData('hpBar', hpBar);
 
-    container.add([circle, initial, hpBar]);
+    container.add([square, initial, hpBar]);
     container.setSize(CELL_SIZE, CELL_SIZE);
-    container.setInteractive(new Phaser.Geom.Circle(0, 0, 11), Phaser.Geom.Circle.Contains);
+    container.setInteractive(new Phaser.Geom.Rectangle(-CELL_SIZE/2 + 2, -CELL_SIZE/2 + 2, CELL_SIZE - 4, CELL_SIZE - 4), Phaser.Geom.Rectangle.Contains);
+
+    // Hover handlers for red square
+    container.on('pointerover', () => {
+      useGameStore.getState().setHoveredCard(unit.card);
+    });
+
+    container.on('pointerout', () => {
+      useGameStore.getState().clearHoveredCard();
+    });
 
     container.on('pointerdown', () => {
       const store = useGameStore.getState();

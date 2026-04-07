@@ -4,6 +4,63 @@
 
 The board system manages the game grid, unit placement, and spatial interactions in Mugen. It provides a 30×30 grid where units are positioned, moved, and interact during combat.
 
+## Visual Debug System - Red Square Implementation (NEW)
+
+### Overview
+Active units now render as bright red squares for clear visual debugging and hover interaction enforcement.
+
+### Red Square Debug Visualization
+
+#### Implementation Details
+- **Color**: Bright red (`0xef4444`) with 90% opacity
+- **Border**: White stroke with 80% opacity
+- **Size**: `CELL_SIZE - 4` (20x20 pixels for 24px grid)
+- **Position**: Centered in grid cell
+- **Interaction**: Full hover and click handling
+
+#### Code Implementation
+```typescript
+// RED SQUARE DEBUG VISUALIZATION
+const square = this.add.rectangle(0, 0, CELL_SIZE - 4, CELL_SIZE - 4, 0xef4444, 0.9);
+square.setStrokeStyle(1, 0xffffff, 0.8);
+
+const initial = this.add.text(0, -1, unit.card.name.charAt(0).toUpperCase(), {
+  fontSize: '9px',
+  fontFamily: 'monospace',
+  color: '#ffffff',
+}).setOrigin(0.5);
+
+container.add([square, initial, hpBar]);
+container.setSize(CELL_SIZE, CELL_SIZE);
+container.setInteractive(new Phaser.Geom.Rectangle(-CELL_SIZE/2 + 2, -CELL_SIZE/2 + 2, CELL_SIZE - 4, CELL_SIZE - 4), Phaser.Geom.Rectangle.Contains);
+```
+
+#### Hover Integration
+```typescript
+// Hover handlers for red square
+container.on('pointerover', () => {
+  useGameStore.getState().setHoveredCard(unit.card);
+});
+
+container.on('pointerout', () => {
+  useGameStore.getState().clearHoveredCard();
+});
+```
+
+### Grid Alignment
+
+#### Positioning Logic
+- **Grid Coordinates**: Unit position `{x, y}` from game state
+- **Pixel Conversion**: `px = x * CELL_SIZE + CELL_SIZE / 2`
+- **Center Alignment**: Squares centered in grid cells
+- **Precision**: Exact pixel alignment for visual clarity
+
+#### Cell Occupancy
+- **Full Cell Coverage**: Red square occupies most of grid cell
+- **Border Spacing**: 2px margin from cell edges
+- **Visual Distinction**: Clear separation between adjacent units
+- **Overlap Prevention**: Units cannot occupy same cell
+
 ## Core Components
 
 ### Board State

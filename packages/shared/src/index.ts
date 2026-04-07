@@ -7,3 +7,4 @@ export * as GameEngine from './engines/game/index.js';
 export * as CombatEngine from './engines/combat/index.js';
 export * as AbilityEngine from './engines/ability/index.js';
 export * as TurnEngine from './engines/turn/index.js';
+export * as StartingPlacementEngine from './engines/starting-placement/index.js';

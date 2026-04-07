@@ -1,5 +1,6 @@
 import type { GameState, Position, Result, UnitInstance, UnitCard } from '../../types/index.js';
 import { placeUnit } from '../board/index.js';
+import { assignActiveAndBenchUnits, initializePlayerBoardState } from './assignment.js';
 
 // Helper function to create UnitInstance from UnitCard
 function createUnitInstance(overrides: {
@@ -148,3 +149,6 @@ export function placeStartingUnits(gameState: GameState, playerId: string): Resu
     }
   };
 }
+
+// Export the new assignment functions
+export { assignActiveAndBenchUnits, initializePlayerBoardState };

@@ -22,6 +22,9 @@ export interface GameStore {
   selectedUnitId: string | null;
   validMoves: Position[];
   hoveredUnit: UnitInstance | null;
+  hoveredCard: Card | null;
+  activeUnits: UnitInstance[];
+  benchUnits: UnitCard[];
   error: string | null;
 
   // Actions
@@ -39,6 +42,10 @@ export interface GameStore {
   confirmStartingUnits: () => void;
   setHoveredUnit: (unit: UnitInstance | null) => void;
   clearHoveredUnit: () => void;
+  setHoveredCard: (card: Card | null) => void;
+  clearHoveredCard: () => void;
+  setActiveUnits: (units: UnitInstance[]) => void;
+  setBenchUnits: (units: UnitCard[]) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   reset: () => void;
@@ -56,6 +63,9 @@ const initialState = {
   selectedUnitId: null,
   validMoves: [],
   hoveredUnit: null,
+  hoveredCard: null,
+  activeUnits: [],
+  benchUnits: [],
   error: null,
 };
 
@@ -67,7 +77,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setLobbyCode: (code) => set({ lobbyCode: code }),
   setScreen: (screen) => set({ screen }),
   setLobbyPlayers: (players) => set({ lobbyPlayers: players }),
-  setGameState: (state) => set({ gameState: state }),
+  setGameState: (state) => {
+    set({ gameState: state });
+    
+    // Update active and bench units when game state changes
+    const playerId = get().playerId;
+    if (state && playerId) {
+      const currentPlayer = state.players.find(p => p.id === playerId);
+      if (currentPlayer) {
+        set({ 
+          activeUnits: currentPlayer.units,
+          benchUnits: currentPlayer.team.reserveUnits
+        });
+      }
+    }
+  },
   selectUnit: (unitId) => set({ selectedUnitId: unitId }),
   setValidMoves: (moves) => set({ validMoves: moves }),
   clearValidMoves: () => set({ validMoves: [] }),
@@ -95,6 +119,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   setHoveredUnit: (unit) => set({ hoveredUnit: unit }),
   clearHoveredUnit: () => set({ hoveredUnit: null }),
+  setHoveredCard: (card) => set({ hoveredCard: card }),
+  clearHoveredCard: () => set({ hoveredCard: null }),
+  setActiveUnits: (units) => set({ activeUnits: units }),
+  setBenchUnits: (units) => set({ benchUnits: units }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
   reset: () => set(initialState),

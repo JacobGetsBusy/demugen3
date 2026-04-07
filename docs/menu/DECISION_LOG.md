@@ -1,5 +1,33 @@
 # Decision Log
 
+## DEC-018: Server-Triggered Unit Placement Integration
+- **Date**: 2026-04-07
+- **Context**: Need to integrate placement logic with server's LOCK_TEAM intent handling
+- **Decision**: Enhance server's LOCK_TEAM case to place units for all players when all teams are locked
+- **Rationale**: Ensures placement happens automatically and consistently when game transitions to IN_PROGRESS
+- **Implementation**: Added StartingPlacementEngine.placeStartingUnits calls in action-resolver.ts
+
+## DEC-019: Client Store Reactive Updates for Placement
+- **Date**: 2026-04-07
+- **Context**: Client needs to react to placement updates and display active/bench units
+- **Decision**: Enhanced game store setGameState to automatically update activeUnits and benchUnits
+- **Rationale**: Provides reactive UI updates without manual state management
+- **Implementation**: Added activeUnits and benchUnits to game store with automatic synchronization
+
+## DEC-020: Deterministic Multiplayer Positioning Algorithm
+- **Date**: 2026-04-07
+- **Context**: All clients must see identical unit positions for multiplayer consistency
+- **Decision**: Implement deterministic algorithm based on player index and board dimensions
+- **Rationale**: Guarantees same results across all clients and prevents desynchronization
+- **Algorithm**: Even-indexed players on left side, odd-indexed on right side, with mathematical centering
+
+## DEC-021: TDD Approach for Placement System
+- **Date**: 2026-04-07
+- **Context**: Complex placement logic needs comprehensive testing
+- **Decision**: Follow strict TDD - write failing tests first, then implement minimal logic to pass
+- **Rationale**: Ensures all edge cases covered and provides regression protection
+- **Result**: 30 tests created, all passing, with comprehensive coverage
+
 ## DEC-013: Active Card Placement Strategy
 - **Date**: 2026-04-07
 - **Context**: Need to position 3 active cards on player's side of board at game start

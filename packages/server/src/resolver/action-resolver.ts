@@ -9,6 +9,7 @@ import {
   TurnEngine,
   GameEngine,
   PreGameManager,
+  StartingPlacementEngine,
 } from '@mugen/shared';
 import type { Lobby } from '../lobby/lobby-manager.js';
 
@@ -123,11 +124,22 @@ function resolvePreGameIntent(
         return player;
       });
 
-      // Check if all players have locked teams - if so, transition to IN_PROGRESS
+      // Check if all players have locked teams - if so, place units and transition to IN_PROGRESS
       const allLocked = updatedPlayers.every(p => (p as any).team?.locked === true);
       
       if (allLocked) {
-        return { ok: true, value: { ...state, players: updatedPlayers, phase: GamePhase.IN_PROGRESS } };
+        // Place starting units for all players before transitioning to IN_PROGRESS
+        let gameStateWithUnits = { ...state, players: updatedPlayers };
+        
+        for (const player of updatedPlayers) {
+          const placeResult = StartingPlacementEngine.placeStartingUnits(gameStateWithUnits, player.id);
+          if (!placeResult.ok) {
+            return { ok: false, error: `Failed to place units for ${player.name}: ${placeResult.error}` };
+          }
+          gameStateWithUnits = placeResult.value;
+        }
+        
+        return { ok: true, value: { ...gameStateWithUnits, phase: GamePhase.IN_PROGRESS } };
       }
 
       return { ok: true, value: { ...state, players: updatedPlayers } };
