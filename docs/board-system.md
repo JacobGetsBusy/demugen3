@@ -92,19 +92,21 @@ const positions = getStartingPositions(playerIndex, boardWidth, boardHeight);
 const result = placeStartingUnits(gameState, playerId);
 ```
 
-### Positioning Logic
+### Positioning Logic (Updated — Quadrant Layout)
 
 #### Active Unit Positions
-- **Player 0 & 2** (left side): X = floor(boardWidth/4)
-- **Player 1 & 3** (right side): X = floor(3*boardWidth/4)
-- **Y positions**: [centerY-2, centerY, centerY+2] (top, middle, bottom)
-- **Example**: 30×30 board, Player 1 gets positions at (7,13), (7,15), (7,17)
+Players are assigned to quadrants to avoid position collisions in 4-player games:
+- **Player 0**: Left side, upper quadrant — X = floor(boardWidth/4), Y centered on boardHeight/4
+- **Player 1**: Right side, upper quadrant — X = floor(3*boardWidth/4), Y centered on boardHeight/4
+- **Player 2**: Left side, lower quadrant — X = floor(boardWidth/4), Y centered on 3*boardHeight/4
+- **Player 3**: Right side, lower quadrant — X = floor(3*boardWidth/4), Y centered on 3*boardHeight/4
+- **Y spacing**: [centerY-2, centerY, centerY+2] (top, middle, bottom)
+- **Example**: 30×30 board — Player 0: (7,5), (7,7), (7,9) | Player 1: (22,5), (22,7), (22,9)
 
 #### Reserve Unit Positions
 - **Player 0 & 2** (left side): X = -2 (outside board)
 - **Player 1 & 3** (right side): X = boardWidth + 1 (outside board)
 - **Y positions**: [centerY-3, centerY, centerY+3]
-- **Example**: 30×30 board, Player 1 gets positions at (-2,12), (-2,15), (-2,18)
 
 ## Board Engine Functions
 

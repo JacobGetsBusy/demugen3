@@ -118,6 +118,37 @@
 
 ---
 
+## CRITICAL BUG — No Active Units Visible at Game Start (FIXED)
+
+### Date: April 7, 2026
+### Status: RESOLVED
+
+### Bug Description
+No active units appeared on the board for any player at game start. The active vs. bench distinction was not reflected in-game.
+
+### Root Cause
+`action-resolver.ts` `SELECT_TEAM` and `LOCK_TEAM` intent handlers **corrupted the `PlayerTeam` type**:
+- Replaced `{ activeUnits, reserveUnits, locked }` with `{ unitCardIds, locked }` using unsafe `(player as any).team = ...`
+- When `placeStartingUnits()` ran after all teams locked, `player.team.activeUnits` was `undefined`
+- The `activeUnits.length !== 3` validation failed, so no units were placed
+- Result: `player.units` remained `[]` for all players → nothing rendered
+
+### Secondary Bug
+`getStartingPositions()` assigned the same positions to players 0+2 and 1+3, causing cell occupancy collisions in 4-player games.
+
+### Fix Applied
+1. **`action-resolver.ts`**: Extended `SelectTeamIntent` to carry `activeUnits: UnitCard[]` and `reserveUnits: UnitCard[]`. Fixed both handlers to build proper `PlayerTeam` objects.
+2. **`starting-placement/index.ts`**: Changed positioning from center-based to quadrant-based layout (upper/lower × left/right).
+3. **`game-store.ts`**: Changed `activeUnits` to include ALL players' units (not just local) for complete board rendering.
+
+### Verification
+- 15 new visibility tests pass (active-unit-visibility.test.ts)
+- 25 server tests pass (including updated pregame-intent-handling.test.ts)
+- 184 shared tests pass (excluding 3 pre-existing documented bug tests)
+- 92 relevant client tests pass (excluding 4 pre-existing routing/import failures)
+
+---
+
 ## No Blocking Issues
 
 ### Implementation Complete
@@ -131,6 +162,6 @@ All critical functionality implemented successfully. Minor TypeScript warnings e
 
 ---
 
-**Error Status**: NONE - Implementation Successful
-**Priority**: LOW - Minor cleanup only
+**Error Status**: RESOLVED
+**Priority**: N/A — Critical bug fixed
 **Blocker**: FALSE

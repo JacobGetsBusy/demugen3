@@ -1,0 +1,15 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useGameStore } from '../store/game-store.js';
+export function HoverPanel() {
+    const hoveredCard = useGameStore(state => state.hoveredCard);
+    if (!hoveredCard) {
+        return (_jsx("div", { "data-testid": "hover-panel", className: "fixed left-0 top-1/2 -translate-y-1/2 w-80 bg-gray-900/90 border-r border-white/10 p-6", children: _jsx("div", { className: "text-gray-500 text-sm text-center", children: "Hover over a unit to see details" }) }));
+    }
+    // Only show unit details for unit cards
+    if (hoveredCard.cardType !== 'UNIT') {
+        return (_jsx("div", { "data-testid": "hover-panel", className: "fixed left-0 top-1/2 -translate-y-1/2 w-80 bg-gray-900/90 border-r border-white/10 p-6", children: _jsx("div", { className: "text-gray-500 text-sm text-center", children: "Non-unit cards not supported in hover panel" }) }));
+    }
+    const unitCard = hoveredCard;
+    return (_jsx("div", { "data-testid": "hover-panel", className: "fixed left-0 top-1/2 -translate-y-1/2 w-80 bg-gray-900/90 border-r border-white/10 p-6", children: _jsxs("div", { className: "text-white", children: [_jsx("h2", { className: "text-xl font-bold mb-4 text-red-400", children: unitCard.name }), _jsxs("div", { className: "space-y-3", children: [_jsxs("div", { className: "flex justify-between", children: [_jsx("span", { className: "text-gray-400", children: "HP:" }), _jsx("span", { className: "font-semibold", children: unitCard.hp })] }), _jsxs("div", { className: "flex justify-between", children: [_jsx("span", { className: "text-gray-400", children: "ATK:" }), _jsx("span", { className: "font-semibold", children: unitCard.atk })] }), _jsxs("div", { className: "flex justify-between", children: [_jsx("span", { className: "text-gray-400", children: "Movement:" }), _jsx("span", { className: "font-semibold", children: unitCard.movement })] }), _jsxs("div", { className: "flex justify-between", children: [_jsx("span", { className: "text-gray-400", children: "Range:" }), _jsx("span", { className: "font-semibold", children: unitCard.range })] }), _jsxs("div", { className: "flex justify-between", children: [_jsx("span", { className: "text-gray-400", children: "Cost:" }), _jsx("span", { className: "font-semibold text-yellow-400", children: unitCard.cost })] })] }), _jsxs("div", { className: "mt-4 pt-4 border-t border-white/20", children: [_jsx("h3", { className: "text-sm font-semibold text-gray-400 mb-2", children: "Ability" }), _jsxs("div", { className: "bg-gray-800 rounded p-3", children: [_jsx("div", { className: "font-semibold text-blue-400 mb-1", children: unitCard.ability.name }), _jsx("div", { className: "text-xs text-gray-300 mb-2", children: unitCard.ability.description }), _jsxs("div", { className: "text-xs text-yellow-400", children: ["Cost: ", unitCard.ability.cost] })] })] }), _jsx("div", { className: "mt-4 pt-4 border-t border-white/20", children: _jsxs("div", { className: "text-xs text-gray-500", children: ["Card ID: ", unitCard.id] }) })] }) }));
+}
+//# sourceMappingURL=HoverPanel.js.map

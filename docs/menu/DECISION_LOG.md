@@ -1,5 +1,25 @@
 # Decision Log
 
+## DEC-022: Fix PlayerTeam Type Corruption in Action Resolver
+- **Date**: 2026-04-07
+- **Context**: `SELECT_TEAM` and `LOCK_TEAM` handlers in `action-resolver.ts` replaced the typed `PlayerTeam` with a loose `{ unitCardIds, locked }` object using unsafe `as any` casts, causing `placeStartingUnits()` to fail silently
+- **Decision**: Extend `SelectTeamIntent` to carry full `activeUnits: UnitCard[]` and `reserveUnits: UnitCard[]`; fix both handlers to build proper `PlayerTeam` objects
+- **Rationale**: Server must preserve the `PlayerTeam` interface through the entire intent pipeline; the root cause was type erasure via `as any`
+- **Impact**: Critical — this was the root cause of "no units visible at game start"
+
+## DEC-023: Quadrant-Based Starting Positions for 4 Players
+- **Date**: 2026-04-07
+- **Context**: `getStartingPositions()` assigned identical Y positions for players 0+2 and 1+3, causing cell occupancy collisions in 4-player games
+- **Decision**: Divide board into quadrants — upper-left, upper-right, lower-left, lower-right — based on `playerIndex`
+- **Rationale**: Guarantees no position collisions for up to 4 players with deterministic results
+- **Algorithm**: `isLeftSide = playerIndex % 2 === 0`, `isUpperHalf = playerIndex < 2`
+
+## DEC-024: Store activeUnits Contains ALL Players' Units
+- **Date**: 2026-04-07
+- **Context**: Zustand store `activeUnits` previously only held the local player's units, preventing components from accessing other players' units for rendering
+- **Decision**: Change `setGameState` to populate `activeUnits` with `state.players.flatMap(p => p.units)` — all players' placed units
+- **Rationale**: `GameScene.drawUnits` already iterates all players from `gameState.players`, but any component reading `activeUnits` should also see the full board state; `benchUnits` remains local-player only
+
 ## DEC-018: Server-Triggered Unit Placement Integration
 - **Date**: 2026-04-07
 - **Context**: Need to integrate placement logic with server's LOCK_TEAM intent handling
