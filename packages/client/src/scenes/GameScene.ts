@@ -1,12 +1,24 @@
 import Phaser from 'phaser';
 import type { GameState, Position, UnitInstance } from '@mugen/shared';
 import { useGameStore } from '../store/game-store.js';
+import { VisibilityEngine } from '@mugen/shared';
 
 const CELL_SIZE = 24;
 const GRID_COLOR = 0x2a2a4a;
 const GRID_LINE_COLOR = 0x3a3a5a;
 const HIGHLIGHT_COLOR = 0x6366f1;
-const PLAYER_COLORS = [0x6366f1, 0xef4444, 0x22c55e, 0xf59e0b];
+
+// Map player colors to Phaser color numbers
+const COLOR_MAP: Record<string, number> = {
+  red: 0xef4444,
+  blue: 0x6366f1,
+  yellow: 0xf59e0b,
+  green: 0x22c55e,
+};
+
+function getPlayerColor(color?: string): number {
+  return color ? COLOR_MAP[color] ?? 0x6366f1 : 0x6366f1;
+}
 
 export class GameScene extends Phaser.Scene {
   private cellGraphics: Phaser.GameObjects.Graphics | null = null;
@@ -35,7 +47,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.events.on('pointerout', () => {
-      useGameStore.getState().clearHoveredUnit();
+      useGameStore.getState().clearHoveredCard();
     });
 
     this.updateFromStore();
@@ -78,26 +90,38 @@ export class GameScene extends Phaser.Scene {
 
   private drawUnits(state: GameState) {
     const activeUnitIds = new Set<string>();
+    
+    // CRITICAL FIX: Use getVisibleUnits() to get ALL active units from ALL players
+    const visibleUnits = VisibilityEngine.getVisibleUnits(state);
+    
+    // Debug logging to verify visibility system
+    console.log('VISIBLE UNITS:', visibleUnits.map(u => ({
+      id: u.card.id,
+      owner: u.ownerId,
+      color: u.color,
+      position: { x: u.position!.x, y: u.position!.y }
+    })));
 
-    state.players.forEach((player, playerIndex) => {
-      const color = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length]!;
+    visibleUnits.forEach((unit: UnitInstance) => {
+      activeUnitIds.add(unit.card.id);
 
-      player.units.forEach((unit: UnitInstance) => {
-        if (!unit.position || unit.currentHp <= 0) return;
-        activeUnitIds.add(unit.card.id);
+      // Use actual unit positions (no perspective transformation needed)
+      let displayPosition = unit.position!;
 
-        const px = unit.position.x * CELL_SIZE + CELL_SIZE / 2;
-        const py = unit.position.y * CELL_SIZE + CELL_SIZE / 2;
+      const px = displayPosition.x * CELL_SIZE + CELL_SIZE / 2;
+      const py = displayPosition.y * CELL_SIZE + CELL_SIZE / 2;
 
-        let container = this.unitSprites.get(unit.card.id);
-        if (!container) {
-          container = this.createUnitSprite(unit, color);
-          this.unitSprites.set(unit.card.id, container);
-        }
+      // Use unit's assigned color instead of hardcoded array
+      const unitColor = getPlayerColor(unit.color);
+      
+      let container = this.unitSprites.get(unit.card.id);
+      if (!container) {
+        container = this.createUnitSprite(unit, unitColor);
+        this.unitSprites.set(unit.card.id, container);
+      }
 
-        container.setPosition(px, py);
-        this.updateUnitSprite(container, unit, color);
-      });
+      container.setPosition(px, py);
+      this.updateUnitSprite(container, unit, unitColor);
     });
 
     // Remove dead units
@@ -112,8 +136,8 @@ export class GameScene extends Phaser.Scene {
   private createUnitSprite(unit: UnitInstance, color: number): Phaser.GameObjects.Container {
     const container = this.add.container(0, 0);
 
-    // RED SQUARE DEBUG VISUALIZATION
-    const square = this.add.rectangle(0, 0, CELL_SIZE - 4, CELL_SIZE - 4, 0xef4444, 0.9);
+    // Use actual unit color instead of hardcoded red
+    const square = this.add.rectangle(0, 0, CELL_SIZE - 4, CELL_SIZE - 4, color, 0.9);
     square.setStrokeStyle(1, 0xffffff, 0.8);
 
     const initial = this.add.text(0, -1, unit.card.name.charAt(0).toUpperCase(), {
@@ -127,7 +151,7 @@ export class GameScene extends Phaser.Scene {
 
     container.add([square, initial, hpBar]);
     container.setSize(CELL_SIZE, CELL_SIZE);
-    container.setInteractive(new Phaser.Geom.Rectangle(-CELL_SIZE/2 + 2, -CELL_SIZE/2 + 2, CELL_SIZE - 4, CELL_SIZE - 4), Phaser.Geom.Rectangle.Contains);
+    container.setInteractive(new Phaser.Geom.Rectangle(-CELL_SIZE/2, -CELL_SIZE/2, CELL_SIZE, CELL_SIZE), Phaser.Geom.Rectangle.Contains);
 
     // Hover handlers for red square
     container.on('pointerover', () => {
@@ -211,27 +235,27 @@ export class GameScene extends Phaser.Scene {
     const store = useGameStore.getState();
     const state = store.gameState;
     if (!state) {
-      store.clearHoveredUnit();
+      store.clearHoveredCard();
       return;
     }
 
     // Find if there's a unit at this position
     const cell = state.board.cells[pos.y]?.[pos.x];
     if (!cell || !cell.occupantId) {
-      store.clearHoveredUnit();
+      store.clearHoveredCard();
       return;
     }
 
-    // Resolve the UnitInstance from game state
+    // Find the unit instance
     for (const player of state.players) {
       for (const unit of player.units) {
         if (unit.card.id === cell.occupantId) {
-          store.setHoveredUnit(unit);
+          store.setHoveredCard(unit.card);
           return;
         }
       }
     }
 
-    store.clearHoveredUnit();
+    store.clearHoveredCard();
   }
 }

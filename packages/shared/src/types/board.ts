@@ -14,5 +14,5 @@ export interface BoardState {
   cells: GridCell[][];
 }
 
-export const DEFAULT_BOARD_WIDTH = 30;
-export const DEFAULT_BOARD_HEIGHT = 30;
+export const DEFAULT_BOARD_WIDTH = 23;
+export const DEFAULT_BOARD_HEIGHT = 23;

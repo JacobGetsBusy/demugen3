@@ -21,7 +21,6 @@ export interface GameStore {
   gameState: GameState | null;
   selectedUnitId: string | null;
   validMoves: Position[];
-  hoveredUnit: UnitInstance | null;
   hoveredCard: Card | null;
   activeUnits: UnitInstance[];
   benchUnits: UnitCard[];
@@ -40,8 +39,6 @@ export interface GameStore {
   setSelectedDeck: (deck: Card[] | null) => void;
   setStartingUnits: (units: UnitCard[]) => void;
   confirmStartingUnits: () => void;
-  setHoveredUnit: (unit: UnitInstance | null) => void;
-  clearHoveredUnit: () => void;
   setHoveredCard: (card: Card | null) => void;
   clearHoveredCard: () => void;
   setActiveUnits: (units: UnitInstance[]) => void;
@@ -62,7 +59,6 @@ const initialState = {
   gameState: null,
   selectedUnitId: null,
   validMoves: [],
-  hoveredUnit: null,
   hoveredCard: null,
   activeUnits: [],
   benchUnits: [],
@@ -80,16 +76,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setGameState: (state) => {
     set({ gameState: state });
     
-    // Update active and bench units when game state changes
+    // Sync active and bench units from server-authoritative state
     const playerId = get().playerId;
     if (state && playerId) {
+      // activeUnits = ALL players' placed units (needed for full board rendering)
+      const allActiveUnits = state.players.flatMap(p => p.units);
+      
+      // benchUnits = local player's reserve units only
       const currentPlayer = state.players.find(p => p.id === playerId);
-      if (currentPlayer) {
-        set({ 
-          activeUnits: currentPlayer.units,
-          benchUnits: currentPlayer.team.reserveUnits
-        });
-      }
+      const bench = currentPlayer ? currentPlayer.team.reserveUnits : [];
+      
+      set({ 
+        activeUnits: allActiveUnits,
+        benchUnits: bench,
+      });
     }
   },
   selectUnit: (unitId) => set({ selectedUnitId: unitId }),
@@ -98,7 +98,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSelectedDeck: (deck) => set({ selectedDeck: deck }),
   setStartingUnits: (units) => set({ startingUnits: units }),
   confirmStartingUnits: () => {
-    const { startingUnits, setScreen } = get();
+    const { startingUnits } = get();
     
     // Validate selection (redundant with UI validation but safe)
     if (startingUnits.length !== 6) {
@@ -112,14 +112,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
     
-    // TODO: Send to server for actual game initialization
-    // For now, transition to game screen
+    // Send to server for actual game initialization
     console.log('Confirming starting units:', startingUnits);
-    setScreen('game');
+    import('../network/socket-client.js').then(({ confirmStartingUnits }) => {
+      confirmStartingUnits(startingUnits);
+    });
   },
-  setHoveredUnit: (unit) => set({ hoveredUnit: unit }),
-  clearHoveredUnit: () => set({ hoveredUnit: null }),
-  setHoveredCard: (card) => set({ hoveredCard: card }),
+    setHoveredCard: (card) => set({ hoveredCard: card }),
   clearHoveredCard: () => set({ hoveredCard: null }),
   setActiveUnits: (units) => set({ activeUnits: units }),
   setBenchUnits: (units) => set({ benchUnits: units }),

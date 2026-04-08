@@ -38,6 +38,8 @@ export interface EndTurnIntent {
 export interface SelectTeamIntent {
   type: IntentType.SELECT_TEAM;
   unitCardIds: string[];
+  activeUnits: import('./card.js').UnitCard[];
+  reserveUnits: import('./card.js').UnitCard[];
 }
 
 export interface LockTeamIntent {

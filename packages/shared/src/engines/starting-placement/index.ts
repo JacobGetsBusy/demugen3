@@ -2,6 +2,13 @@ import type { GameState, Position, Result, UnitInstance, UnitCard } from '../../
 import { placeUnit } from '../board/index.js';
 import { assignActiveAndBenchUnits, initializePlayerBoardState } from './assignment.js';
 
+// Debug logging function
+const dbg = (message: any, ...args: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[SPAWN] ${message}`, ...args);
+  }
+};
+
 // Helper function to create UnitInstance from UnitCard
 function createUnitInstance(overrides: {
   card: UnitCard;
@@ -17,39 +24,64 @@ function createUnitInstance(overrides: {
 }
 
 /**
- * Calculate starting positions for active units based on player index
- * Player 0 (left): positions on left side of board, facing right
- * Player 1 (right): positions on right side of board, facing left
- * Player 2 (left): positions on left side of board, facing right  
- * Player 3 (right): positions on right side of board, facing left
+ * Calculate spawn positions for active units based on player side.
+ * Supports 2–4 players with no position collisions.
+ *
+ * Layout (bottom/top/left/right):
+ *   Player 0 → Bottom side (3 rows up from bottom)
+ *   Player 1 → Top side (3 rows down from top)
+ *   Player 2 → Left side (3 columns right from left edge)
+ *   Player 3 → Right side (3 columns left from right edge)
+ *
+ * Each player gets 3 evenly-spaced positions on their side.
  */
-export function getStartingPositions(playerIndex: number, boardWidth: number, boardHeight: number): Position[] {
+export function getSpawnPositions(playerIndex: number, boardWidth: number, boardHeight: number): Position[] {
   const positions: Position[] = [];
-  const centerY = Math.floor(boardHeight / 2);
+
+  // Determine side based on player index
+  const side = playerIndex % 4;
+  const offset = 2; // 3 tiles inward from edge (0-indexed)
   
-  // Determine which side of the board this player starts on
-  const isLeftSide = playerIndex % 2 === 0;
-  
-  // Calculate base X position (centered horizontally on player's side)
-  const playerSideWidth = Math.floor(boardWidth / 2);
-  const baseX = isLeftSide 
-    ? Math.floor(playerSideWidth / 2)  // Center of left side
-    : playerSideWidth + Math.floor(playerSideWidth / 2); // Center of right side
-  
-  // Create 3 positions in a horizontal line, centered vertically
-  // Positions: top, middle, bottom
-  const yPositions = [
-    centerY - 2, // Top
-    centerY,     // Middle  
-    centerY + 2  // Bottom
-  ];
-  
-  for (const y of yPositions) {
-    // Ensure positions are within board bounds
-    const clampedY = Math.max(0, Math.min(boardHeight - 1, y));
-    positions.push({ x: baseX, y: clampedY });
+  dbg(`getSpawnPositions: playerIndex=${playerIndex}, side=${side}, boardSize=${boardWidth}x${boardHeight}`);
+
+  if (side === 0) {
+    // Bottom side: 3 rows up from bottom
+    const y = boardHeight - offset - 1;
+    const centerX = Math.floor(boardWidth / 2);
+    const xPositions = [centerX - 4, centerX, centerX + 4];
+    for (const x of xPositions) {
+      const clampedX = Math.max(0, Math.min(boardWidth - 1, x));
+      positions.push({ x: clampedX, y });
+    }
+  } else if (side === 1) {
+    // Top side: 3 rows down from top
+    const y = offset;
+    const centerX = Math.floor(boardWidth / 2);
+    const xPositions = [centerX - 4, centerX, centerX + 4];
+    for (const x of xPositions) {
+      const clampedX = Math.max(0, Math.min(boardWidth - 1, x));
+      positions.push({ x: clampedX, y });
+    }
+  } else if (side === 2) {
+    // Left side: 3 columns right from left edge
+    const x = offset;
+    const centerY = Math.floor(boardHeight / 2);
+    const yPositions = [centerY - 4, centerY, centerY + 4];
+    for (const y of yPositions) {
+      const clampedY = Math.max(0, Math.min(boardHeight - 1, y));
+      positions.push({ x, y: clampedY });
+    }
+  } else if (side === 3) {
+    // Right side: 3 columns left from right edge
+    const x = boardWidth - offset - 1;
+    const centerY = Math.floor(boardHeight / 2);
+    const yPositions = [centerY - 4, centerY, centerY + 4];
+    for (const y of yPositions) {
+      const clampedY = Math.max(0, Math.min(boardHeight - 1, y));
+      positions.push({ x, y: clampedY });
+    }
   }
-  
+
   return positions;
 }
 
@@ -100,7 +132,7 @@ export function placeStartingUnits(gameState: GameState, playerId: string): Resu
   }
   
   const playerIndex = gameState.players.indexOf(player);
-  const startingPositions = getStartingPositions(playerIndex, gameState.board.width, gameState.board.height);
+  const startingPositions = getSpawnPositions(playerIndex, gameState.board.width, gameState.board.height);
   
   let updatedBoard = gameState.board;
   const unitInstances: typeof player.units = [];
@@ -150,5 +182,6 @@ export function placeStartingUnits(gameState: GameState, playerId: string): Resu
   };
 }
 
-// Export the new assignment functions
+// Export assignment + match-init functions
 export { assignActiveAndBenchUnits, initializePlayerBoardState };
+export { initializeMatchUnits } from './match-init.js';

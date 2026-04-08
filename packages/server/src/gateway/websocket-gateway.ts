@@ -10,6 +10,7 @@ import {
 } from '../lobby/lobby-manager.js';
 import type { Lobby } from '../lobby/lobby-manager.js';
 import { resolveIntent, createInitialGameState } from '../resolver/action-resolver.js';
+import { StartingPlacementEngine } from '@mugen/shared';
 import { sanitizeForPlayer } from '../resolver/sanitize.js';
 
 export function setupGateway(io: SocketServer, state: ServerState): void {
@@ -86,7 +87,55 @@ export function setupGateway(io: SocketServer, state: ServerState): void {
         state.playerToGame.set(player.id, gameState.id);
       }
 
-      broadcastGameState(io, gameState, startResult.value);
+      // Don't broadcast yet - wait for confirm_starting_units to call initializeMatchUnits
+    });
+
+    socket.on('confirm_starting_units', (data: { units: any[] }) => {
+      const gameId = state.playerToGame.get(playerId);
+      if (!gameId) {
+        socket.emit('error', { message: 'Not in a game' });
+        return;
+      }
+
+      const gameState = state.games.get(gameId);
+      if (!gameState) {
+        socket.emit('error', { message: 'Game not found' });
+        return;
+      }
+
+      // Update player's team with selected units
+      const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+      if (playerIndex === -1) {
+        socket.emit('error', { message: 'Player not found in game' });
+        return;
+      }
+
+      // Use assignActiveAndBenchUnits to split units
+      const { active, bench } = StartingPlacementEngine.assignActiveAndBenchUnits(data.units);
+      
+      // Update the player's team
+      gameState.players[playerIndex]!.team = {
+        activeUnits: active,
+        reserveUnits: bench,
+        locked: true,
+      };
+
+      // Initialize match units with our new function
+      const initResult = StartingPlacementEngine.initializeMatchUnits(gameState);
+      if (!initResult.ok) {
+        socket.emit('error', { message: initResult.error });
+        return;
+      }
+
+      // Update game state
+      state.games.set(gameId, initResult.value);
+
+      // Broadcast to all players
+      const code = state.playerToLobby.get(playerId);
+      const lobby = code ? state.lobbies.get(code) : undefined;
+      if (lobby) {
+        broadcastGameState(io, initResult.value, lobby);
+      }
     });
 
     socket.on('game_intent', (intent: ClientIntent) => {

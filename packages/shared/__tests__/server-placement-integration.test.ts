@@ -82,11 +82,11 @@ describe('Server Integration - Starting Placement Broadcast', () => {
         expect(unit.position!.y).toBeGreaterThanOrEqual(0);
       });
 
-      // Units should be on opposite sides of board
-      const player1AvgX = player1Units.reduce((sum, u) => sum + u.position!.x, 0) / player1Units.length;
-      const player2AvgX = player2Units.reduce((sum, u) => sum + u.position!.x, 0) / player2Units.length;
-      expect(player1AvgX).toBeLessThan(15); // Left side
-      expect(player2AvgX).toBeGreaterThanOrEqual(15); // Right side
+      // Units should be on opposite sides of board (bottom/top)
+      const player1AvgY = player1Units.reduce((sum, u) => sum + u.position!.y, 0) / player1Units.length;
+      const player2AvgY = player2Units.reduce((sum, u) => sum + u.position!.y, 0) / player2Units.length;
+      expect(player1AvgY).toBeGreaterThanOrEqual(20); // Bottom side (23 - 2 - 1)
+      expect(player2AvgY).toBeLessThanOrEqual(2); // Top side (offset = 2)
     });
 
     it('should broadcast complete game state with placed units to all clients', () => {

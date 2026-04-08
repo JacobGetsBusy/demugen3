@@ -1,11 +1,14 @@
 import type { UnitCard, Hand, Deck } from './card.js';
 import type { Position } from './board.js';
 
+export type PlayerColor = 'red' | 'blue' | 'yellow' | 'green';
+
 export interface UnitInstance {
   card: UnitCard;
   currentHp: number;
   position: Position | null;
   ownerId: string;
+  color?: PlayerColor;
   hasMovedThisTurn: boolean;
   hasUsedAbilityThisTurn: boolean;
   hasAttackedThisTurn: boolean;
@@ -32,6 +35,7 @@ export interface PlayerTeam {
 export interface PlayerState {
   id: string;
   name: string;
+  color?: PlayerColor;
   life: number;
   maxLife: number;
   team: PlayerTeam;

@@ -343,8 +343,8 @@ describe('Client State Sync - Starting Placement', () => {
 
       // Assert: Client should have correct data for rendering
       expect(clientState.board).toBeDefined();
-      expect(clientState.board.width).toBe(30);
-      expect(clientState.board.height).toBe(30);
+      expect(clientState.board.width).toBe(23);
+      expect(clientState.board.height).toBe(23);
       
       // Board should have units placed
       const units = clientState.players[0]!.units;

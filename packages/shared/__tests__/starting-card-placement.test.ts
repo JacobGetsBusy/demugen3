@@ -8,7 +8,7 @@ import {
 import { GamePhase } from '../src/types/index.js';
 import type { Position } from '../src/types/index.js';
 import { 
-  getStartingPositions, 
+  getSpawnPositions, 
   getReservePositions, 
   placeStartingUnits 
 } from '../src/engines/starting-placement/index.js';
@@ -120,20 +120,20 @@ describe('Starting Card Placement - Active Cards', () => {
       const boardWidth = 30;
       const boardHeight = 30;
       
-      // Act: Get starting positions for player 1 (left side)
-      const positions = getStartingPositions(0, boardWidth, boardHeight);
+      // Act: Get starting positions for player 1 (bottom side)
+      const positions = getSpawnPositions(0, boardWidth, boardHeight);
 
-      // Assert: Should return 3 positions centered on left side
+      // Assert: Should return 3 positions centered on bottom side
       expect(positions).toHaveLength(3);
       positions.forEach(pos => {
-        expect(pos.x).toBeLessThan(boardWidth / 2); // Left side for player 1
-        expect(pos.y).toBeGreaterThanOrEqual(0);
-        expect(pos.y).toBeLessThan(boardHeight);
+        expect(pos.y).toBeGreaterThanOrEqual(boardHeight - 4); // Bottom side for player 1
+        expect(pos.x).toBeGreaterThanOrEqual(0);
+        expect(pos.x).toBeLessThan(boardWidth);
       });
       
       // Check horizontal centering (allow for integer grid positioning)
       const avgX = positions.reduce((sum, p) => sum + p.x, 0) / positions.length;
-      expect(avgX).toBeCloseTo(boardWidth / 4, -1); // Allow 1 unit tolerance for integer grid
+      expect(avgX).toBeCloseTo(boardWidth / 2, -1); // Allow 1 unit tolerance for integer grid
     });
 
     it('active cards should maintain correct orientation and facing direction', () => {
@@ -141,7 +141,7 @@ describe('Starting Card Placement - Active Cards', () => {
       const playerIndex = 0; // Player 1
       const boardWidth = 30;
       
-      const positions = getStartingPositions(playerIndex, boardWidth, 30);
+      const positions = getSpawnPositions(playerIndex, boardWidth, 30);
 
       // Units should face right (toward center/opponent)
       expect(positions).toHaveLength(3);
@@ -184,7 +184,7 @@ describe('Starting Card Placement - Active Cards', () => {
         phase: GamePhase.IN_PROGRESS,
       });
 
-      const positions = getStartingPositions(0, 10, 10);
+      const positions = getSpawnPositions(0, 10, 10);
       
       // When implemented, positions should be valid within board bounds
       expect(positions).toHaveLength(3);
@@ -204,7 +204,7 @@ describe('Starting Card Placement - Active Cards', () => {
       });
 
       // When implemented, should ensure no two units share same position
-      const positions = getStartingPositions(0, 30, 30);
+      const positions = getSpawnPositions(0, 30, 30);
       
       // When implemented:
       // const uniquePositions = new Set(positions.map(p => `${p.x},${p.y}`));

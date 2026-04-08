@@ -32,6 +32,7 @@ export {
   STARTING_LIFE,
 } from './player.js';
 export type {
+  PlayerColor,
   UnitInstance,
   CombatModifier,
   PlayerTeam,
