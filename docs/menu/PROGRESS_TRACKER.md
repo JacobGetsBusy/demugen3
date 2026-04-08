@@ -57,6 +57,22 @@
 - [x] Zero TypeScript errors
 - [x] Documentation updated: phase-9.md, board-system.md, ui-hand.md, TEST_STRATEGY.md, ERROR_LOG.md, DECISION_LOG.md
 
+## Phase 10 - Active Unit Visibility Fix (Critical Bug)
+- [x] Root cause identified: `action-resolver.ts` SELECT_TEAM/LOCK_TEAM corrupted PlayerTeam type
+- [x] Secondary bug found: getStartingPositions collided for players 2+3 vs 0+1
+- [x] TEST_STRATEGY.md created with full test plan
+- [x] 15 new failing tests written (active-unit-visibility.test.ts)
+- [x] Fix 1: Extended SelectTeamIntent with activeUnits/reserveUnits; fixed both handlers
+- [x] Fix 2: Quadrant-based positioning for 4-player support
+- [x] Fix 3: Zustand store activeUnits now includes ALL players' units
+- [x] Updated server pregame-intent-handling tests to match fixed intent format
+- [x] Updated client store-placement-integration tests for all-player activeUnits
+- [x] All 15 new visibility tests pass
+- [x] All 25 server tests pass
+- [x] All 184 shared tests pass (3 pre-existing documented bug tests excluded)
+- [x] All 92 relevant client tests pass (4 pre-existing routing/import failures excluded)
+- [x] Documentation updated: TEST_STRATEGY.md, board-system.md, ERROR_LOG.md, DECISION_LOG.md, PROGRESS_TRACKER.md
+
 ## Phase 7 - Grid Resize (30×30) & Hover Stats Display
 - [x] Grid constants updated: DEFAULT_BOARD_WIDTH/HEIGHT = 30
 - [x] Board tests updated for 30×30 boundaries and edge cases
